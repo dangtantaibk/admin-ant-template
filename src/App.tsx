@@ -11,6 +11,15 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import OrderListPage from './pages/Orders/OrderListPage';
 import OrderDetailPage from './pages/Orders/OrderDetailPage';
 import ProfilePage from './pages/Profile/ProfilePage';
+// Import role management pages
+import RoleListPage from './pages/Roles/RoleListPage';
+import RoleDetailPage from './pages/Roles/RoleDetailPage';
+import RoleFormPage from './pages/Roles/RoleFormPage';
+import UserListPage from './pages/Users/UserListPage';
+import UserDetailPage from './pages/Users/UserDetailPage';
+import UserFormPage from './pages/Users/UserFormPage';
+
+// Import user management pages
 
 // Protected Route Component
 const ProtectedRoute: React.FC = () => {
@@ -63,6 +72,22 @@ const AppRoutes: React.FC = () => {
             <Route path="orders">
               <Route index element={<OrderListPage />} />
               <Route path=":id" element={<OrderDetailPage />} />
+            </Route>
+            
+            {/* Roles Routes */}
+            <Route path="roles">
+              <Route index element={<RoleListPage />} />
+              <Route path=":id" element={<RoleDetailPage />} />
+              <Route path="create" element={<RoleFormPage />} />
+              <Route path="edit/:id" element={<RoleFormPage />} />
+            </Route>
+            
+            {/* Users Routes */}
+            <Route path="users">
+              <Route index element={<UserListPage />} />
+              <Route path=":id" element={<UserDetailPage />} />
+              <Route path="new" element={<UserFormPage />} />
+              <Route path="edit/:id" element={<UserFormPage />} />
             </Route>
             
             {/* Profile Route */}

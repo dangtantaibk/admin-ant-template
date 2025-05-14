@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   Tabs, 
@@ -36,11 +37,28 @@ interface ProfileUpdateForm {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user: authUser } = useAuth();
   const [updateForm] = Form.useForm<ProfileUpdateForm>();
   const [passwordForm] = Form.useForm<PasswordChangeForm>();
   const [uploadLoading, setUploadLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Get user from localStorage
+  const getUserFromLocalStorage = () => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  };
+
+  // Initialize user data, prioritizing localStorage
+  useEffect(() => {
+    const localUser = getUserFromLocalStorage();
+    if (localUser) {
+      setUser(localUser);
+    } else if (authUser) {
+      setUser(authUser);
+    }
+  }, [authUser]);
 
   // Initialize form with user data
   React.useEffect(() => {
@@ -60,8 +78,20 @@ const ProfilePage: React.FC = () => {
       await apiService.patch(`/users/${user?.id}`, values);
       message.success('Profile updated successfully');
       
-      // Here you would typically update the user context with new data
-      // This depends on how your auth context is set up
+      // Update user in localStorage after successful update
+      const localUser = getUserFromLocalStorage();
+      if (localUser) {
+        localStorage.setItem('user', JSON.stringify({
+          ...localUser,
+          ...values
+        }));
+      }
+      
+      // Update state
+      setUser((prev: any) => ({
+        ...prev,
+        ...values
+      }));
     } catch (error) {
       console.error('Failed to update profile:', error);
       message.error('Failed to update profile');
@@ -94,7 +124,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleAvatarUpload: UploadProps['customRequest'] = async (options) => {
-    const { file, onSuccess, onError } = options;
+    const { onSuccess, onError } = options;
     
     setUploadLoading(true);
     try {
@@ -111,6 +141,21 @@ const ProfilePage: React.FC = () => {
       
       // Update the form
       updateForm.setFieldValue('avatarUrl', mockAvatarUrl);
+      
+      // Update localStorage with new avatar
+      const localUser = getUserFromLocalStorage();
+      if (localUser) {
+        localStorage.setItem('user', JSON.stringify({
+          ...localUser,
+          avatarUrl: mockAvatarUrl
+        }));
+      }
+      
+      // Update state
+      setUser((prev: any) => ({
+        ...prev,
+        avatarUrl: mockAvatarUrl
+      }));
       
       onSuccess?.('Upload successful');
       message.success('Avatar uploaded successfully');
@@ -146,8 +191,13 @@ const ProfilePage: React.FC = () => {
                 <Title level={4}>{user?.fullName || user?.username}</Title>
                 <Text type="secondary">{user?.email}</Text>
                 <div style={{ margin: '16px 0' }}>
-                  {user?.roles?.map(role => (
-                    <Badge key={role} status="processing" text={role} style={{ margin: '0 8px' }} />
+                  {user?.roles?.map((role: any) => (
+                    <Badge 
+                      key={typeof role === 'object' ? role.id : role} 
+                      status="processing" 
+                      text={typeof role === 'object' ? role.name : role} 
+                      style={{ margin: '0 8px' }} 
+                    />
                   ))}
                 </div>
                 <Text>User ID: {user?.id}</Text>
@@ -304,7 +354,9 @@ const ProfilePage: React.FC = () => {
             <Descriptions.Item label="Username" span={3}>{user?.username}</Descriptions.Item>
             <Descriptions.Item label="Email" span={3}>{user?.email}</Descriptions.Item>
             <Descriptions.Item label="Roles" span={3}>
-              {user?.roles?.join(', ') || 'No roles assigned'}
+              {user?.roles ? user.roles.map((role: { name: any; }) => 
+                typeof role === 'object' ? role.name : role
+              ).join(', ') : 'No roles assigned'}
             </Descriptions.Item>
             <Descriptions.Item label="Account Created" span={3}>
               {/* This would need actual data from your user object */}

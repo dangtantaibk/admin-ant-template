@@ -1,21 +1,8 @@
-import axios from 'axios';
+import { USER_KEY, createApiClient, tokenService } from '../config/api.config';
 import { AuthResponse, LoginCredentials, RefreshTokenRequest, UserProfile } from '../types/auth';
 
-// Updated API endpoint
-// const API_URL = '/'; 
-
-// Storage keys
-const ACCESS_TOKEN_KEY = 'accessToken';
-const REFRESH_TOKEN_KEY = 'refreshToken';
-const USER_KEY = 'user';
-
 // Create a separate axios instance for auth requests
-const authClient = axios.create({
-  baseURL: 'https://api.yensao24h.com',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const authClient = createApiClient();
 
 export const authService = {
   // Login user and store tokens
@@ -26,39 +13,58 @@ export const authService = {
         email: credentials.username,
         password: credentials.password
       });
-      const { accessToken, refreshToken, user } = response.data;
-      
+
+      const { access_token: accessToken, refresh_token: refreshToken, user } = response.data;
       // Store tokens and user data
-      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      
+      tokenService.setTokens(accessToken, refreshToken);
+      let userData = user;
+      // If user data is null, fetch it from the /users/me endpoint
+      if (userData == null) {
+        try {
+          console.log('User data is null, fetching from /users/me endpoint');
+          const userResponse = await authClient.get<UserProfile>('/users/me', {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
+          userData = userResponse.data;
+          console.log('Fetched user data:', userData);
+        } catch (userError) {
+          console.error('Failed to fetch user data:', userError);
+        }
+      }
+      // Store user data
+      if (userData) {
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      } else {
+        console.warn('No user data available to store');
+      }
+
+
       return user;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
     }
   },
-  
+
   // Refresh access token
   refreshToken: async (): Promise<string> => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    
+    const refreshToken = tokenService.getRefreshToken();
+
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    
+
     try {
-      // Fix URL to use the correct endpoint
-      const response = await authClient.post<AuthResponse>('/auth/refresh-token', {
+      const response = await authClient.post<AuthResponse>('/auth/refresh', {
         refreshToken,
       } as RefreshTokenRequest);
-      
+
       // Update stored tokens
-      localStorage.setItem(ACCESS_TOKEN_KEY, response.data.accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refreshToken);
-      
-      return response.data.accessToken;
+      tokenService.setTokens(response.data.access_token, response.data.refresh_token);
+
+      return response.data.access_token;
     } catch (error) {
       // If refresh fails, clear auth data
       console.error('Token refresh failed:', error);
@@ -66,14 +72,13 @@ export const authService = {
       throw new Error('Token refresh failed');
     }
   },
-  
+
   // Logout user and clear storage
   logout: (): void => {
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    tokenService.clearTokens();
     localStorage.removeItem(USER_KEY);
   },
-  
+
   // Get current user from storage
   getCurrentUser: (): UserProfile | null => {
     try {
@@ -84,20 +89,19 @@ export const authService = {
       return null;
     } catch (error) {
       console.error('Error parsing user data from localStorage:', error);
-      // If there's an error parsing, clear the invalid data
       localStorage.removeItem(USER_KEY);
       return null;
     }
   },
-  
+
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem(ACCESS_TOKEN_KEY);
+    return tokenService.isAuthenticated();
   },
-  
+
   // Get access token
   getAccessToken: (): string | null => {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    return tokenService.getAccessToken();
   },
 };
 

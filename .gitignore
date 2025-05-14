@@ -7,14 +7,39 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+/.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
+build
+out
 *.local
+
+# Testing
+coverage
+.nyc_output
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Cache and temporary files
+.cache
+.temp
+.tmp
+.eslintcache
+.stylelintcache
+.npm
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -22,3 +47,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Optional: Uncomment to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

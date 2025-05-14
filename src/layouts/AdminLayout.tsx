@@ -2,7 +2,9 @@ import {
   LogoutOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
-  UserOutlined
+  UserOutlined,
+  KeyOutlined,
+  TeamOutlined
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme, Typography } from 'antd';
@@ -31,6 +33,8 @@ function getItem(
 
 const items: MenuItem[] = [
   getItem(<Link to="/admin/orders">Orders</Link>, '/admin/orders', <ShoppingCartOutlined />),
+  getItem(<Link to="/admin/roles">Roles</Link>, '/admin/roles', <KeyOutlined />),
+  getItem(<Link to="/admin/users">Users</Link>, '/admin/users', <TeamOutlined />),
   // getItem(<Link to="/admin/subscriptions">Subscriptions</Link>, '/admin/subscriptions', <NotificationOutlined />),
   // getItem(<Link to="/admin/products">Products</Link>, '/admin/products', <ProductOutlined />),
   // getItem(<Link to="/admin/blog-posts">Blog Posts</Link>, '/admin/blog-posts', <BookOutlined />),
@@ -41,7 +45,7 @@ const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  
+
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -93,15 +97,19 @@ const AdminLayout: React.FC = () => {
         <Header style={{ padding: '0 16px', background: colorBgContainer, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
             <Space className="user-profile-dropdown" style={{ cursor: 'pointer', padding: '8px' }}>
-              <Avatar 
-                icon={<UserOutlined />} 
+              <Avatar
+                icon={<UserOutlined />}
                 src={user?.avatarUrl}
                 style={{ backgroundColor: user?.avatarUrl ? 'transparent' : '#1677ff' }}
               />
               {!collapsed && (
                 <Space direction="vertical" style={{ lineHeight: '1.2' }}>
                   <Text strong style={{ marginBottom: 0 }}>{user?.fullName || user?.username}</Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>{user?.roles?.join(', ')}</Text>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    {user?.roles ? user.roles.map((role: any) =>
+                      typeof role === 'object' ? role.name : role
+                    ).join(', ') : 'No roles assigned'}
+                  </Text>
                 </Space>
               )}
             </Space>
