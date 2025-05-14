@@ -1,0 +1,34 @@
+// Authentication response types
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: UserProfile;
+}
+
+export interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  roles: string[];
+  fullName?: string;
+  avatarUrl?: string; // Added field for profile picture
+}
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+// Auth context types
+export interface AuthContextType {
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  error: string | null;
+}

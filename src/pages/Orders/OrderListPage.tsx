@@ -1,94 +1,45 @@
-import { useState, useEffect, useRef } from 'react';
-import { Table, Typography, Spin, Alert, Button, Modal, message } from 'antd';
-import { EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { EyeOutlined, InfoCircleOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
+import { Button, message, Spin, Table, Typography } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
-import apiService from '../../services/api';
-import { Order, PaginatedResponse, TableParams } from '../../types';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import DetailModal from '../../components/DetailModal';
+import ErrorHandler from '../../components/ErrorHandler';
+import { useDataFetching } from '../../hooks/useDataFetching';
+import { Order } from './types';
 
 const { Title } = Typography;
 
-// Define interface for request params
-interface OrderListParams {
-  page?: number;
-  limit?: number;
-  sortField?: string;
-  sortOrder?: string;
-}
+// Define mapping function for orders
+const mapOrderData = (item: any): Order => ({
+  id: item.id || '',
+  fullName: item.fullName || '',
+  phone: item.phone || '',
+  product: item.product || '',
+  notes: item.notes || '',
+  createdAt: item.createdAt || new Date().toISOString(),
+  updatedAt: item.updatedAt || new Date().toISOString(),
+});
 
 const OrderListPage: React.FC = () => {
-  const [data, setData] = useState<Order[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasError, setHasError] = useState<boolean>(false);
-  const [tableParams, setTableParams] = useState<TableParams>({
-    pagination: {
-      current: 1,
-      pageSize: 10,
-    },
-    filters: {},
+  // Use our custom hook for data fetching
+  const { 
+    data,
+    loading,
+    error,
+    hasError,
+    tableParams,
+    updateParams,
+    handleRetry,
+  } = useDataFetching<Order>({
+    endpoint: '/orders',
+    mappingFunction: mapOrderData,
   });
-  
-  // Sử dụng useRef để theo dõi trạng thái mà không gây render lại
-  const paramsRef = useRef(tableParams);
-  // Theo dõi việc cần tải lại dữ liệu
-  const shouldFetchRef = useRef(true);
 
-  // Tách hàm fetchData ra khỏi callback để tránh việc tạo lại liên tục
-  const fetchData = async () => {
-    // Nếu đang có lỗi và không được chỉ định tải lại, bỏ qua
-    if (hasError && !shouldFetchRef.current) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const params: OrderListParams = {
-        page: paramsRef.current.pagination?.current,
-        limit: paramsRef.current.pagination?.pageSize,
-        sortField: paramsRef.current.sortField,
-        sortOrder: paramsRef.current.sortOrder ? String(paramsRef.current.sortOrder) : undefined,
-      };
-
-      const response = await apiService.get<PaginatedResponse<Order>>('/orders', params);
-      setData(response.data.data);
-      setTableParams((prev) => ({
-        ...prev,
-        pagination: {
-          ...prev.pagination,
-          total: response.data.total,
-        },
-      }));
-      setHasError(false);
-      shouldFetchRef.current = false;
-    } catch (err: unknown) {
-      console.error("Failed to fetch orders:", err);
-      setError('Failed to load orders. Please try again later.');
-      message.error('Failed to load orders.');
-      setHasError(true);
-      shouldFetchRef.current = false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Chỉ gọi fetchData khi mount component hoặc khi shouldFetch thay đổi
-  useEffect(() => {
-    // Cập nhật params hiện tại
-    paramsRef.current = tableParams;
-    
-    // Chỉ gọi API khi cần thiết
-    if (shouldFetchRef.current) {
-      fetchData();
-    }
-  }, [tableParams, hasError, shouldFetchRef.current]);
-
-  // Hàm thử lại khi có lỗi
-  const handleRetry = () => {
-    shouldFetchRef.current = true;
-    setHasError(false);
-    fetchData();
-  };
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const handleTableChange: TableProps<Order>['onChange'] = (
     pagination,
@@ -96,33 +47,38 @@ const OrderListPage: React.FC = () => {
     sorter
   ) => {
     const sorterResult = sorter as SorterResult<Order>;
-    setTableParams({
+    updateParams({
       pagination,
       filters: filters as Record<string, React.Key[] | null>,
       sortField: sorterResult.field as string,
       sortOrder: sorterResult.order,
     });
-    
-    // Đánh dấu rằng cần tải lại dữ liệu mới
-    shouldFetchRef.current = true;
   };
 
   const handleViewDetails = (record: Order) => {
-    // Show order details in a modal
-    Modal.info({
-        title: `Order Details (ID: ${record.id})`,
-        content: (
-            <div>
-                <p><strong>Name:</strong> {record.name}</p>
-                <p><strong>Phone:</strong> {record.phone}</p>
-                <p><strong>Notes:</strong> {record.notes || 'N/A'}</p>
-                <p><strong>Product ID:</strong> {record.productId || 'N/A'}</p>
-                <p><strong>Created At:</strong> {new Date(record.createdAt).toLocaleString()}</p>
-            </div>
-        ),
-        onOk() {},
-        width: 600,
-    });
+    try {
+      if (!record) {
+        message.error('Order details not available');
+        return;
+      }
+      
+      setSelectedOrder(record);
+      setModalVisible(true);
+    } catch (error: unknown) {
+      console.error("Error showing modal:", error);
+      message.error('Failed to display order details');
+    }
+  };
+  
+  // Safe date formatting with error handling
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'No date available';
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
   };
 
   const columns: TableProps<Order>['columns'] = [
@@ -131,17 +87,30 @@ const OrderListPage: React.FC = () => {
       dataIndex: 'id',
       key: 'id',
       sorter: true,
+      width: 300,
+      ellipsis: true,
+      render: (id: string) => (
+        <Link to={`/admin/orders/${id}`} style={{ color: '#1677ff' }}>
+          {id}
+        </Link>
+      ),
     },
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: 'Full Name',
+      dataIndex: 'fullName',
+      key: 'fullName',
       sorter: true,
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+    },
+    {
+      title: 'Product',
+      dataIndex: 'product',
+      key: 'product',
+      ellipsis: true,
     },
     {
       title: 'Notes',
@@ -151,12 +120,6 @@ const OrderListPage: React.FC = () => {
       render: (notes) => notes || '-',
     },
     {
-      title: 'Product ID',
-      dataIndex: 'productId',
-      key: 'productId',
-      render: (productId) => productId || 'N/A',
-    },
-    {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -164,19 +127,48 @@ const OrderListPage: React.FC = () => {
       render: (date: string) => new Date(date).toLocaleString(),
     },
     {
+      title: 'Updated At',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      sorter: true,
+      render: (date: string) => new Date(date).toLocaleString(),
+    },
+    {
       title: 'Actions',
       key: 'actions',
+      width: 150,
+      fixed: 'right',
       render: (_, record) => (
-        <Button
-          icon={<EyeOutlined />}
-          onClick={() => handleViewDetails(record)}
-          type="link"
-        >
-          View
-        </Button>
+        <>
+          <Button
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record)}
+            type="link"
+            style={{ marginRight: 8 }}
+          >
+            Quick View
+          </Button>
+          <Link to={`/admin/orders/${record.id}`}>
+            <Button icon={<InfoCircleOutlined />} type="link">
+              Detail
+            </Button>
+          </Link>
+        </>
       ),
     },
   ];
+
+  // Render content for the detail modal
+  const renderOrderDetails = (order: Order) => (
+    <div>
+      <p><strong>Full Name:</strong> {order.fullName || 'N/A'}</p>
+      <p><strong>Phone:</strong> {order.phone || 'N/A'}</p>
+      <p><strong>Product:</strong> {order.product || 'N/A'}</p>
+      <p><strong>Notes:</strong> {order.notes || 'N/A'}</p>
+      <p><strong>Created At:</strong> {formatDate(order.createdAt)}</p>
+      <p><strong>Updated At:</strong> {formatDate(order.updatedAt)}</p>
+    </div>
+  );
 
   return (
     <div className="order-list-container" style={{ width: '100%' }}>
@@ -192,7 +184,14 @@ const OrderListPage: React.FC = () => {
           </Button>
         )}
       </div>
-      {error && <Alert message={error} type="error" showIcon style={{ marginBottom: 16 }} />}
+      
+      <ErrorHandler 
+        error={error} 
+        hasError={hasError}
+        onRetry={handleRetry}
+        showRetryButton={false}
+      />
+      
       <Spin spinning={loading}>
         <Table
           columns={columns}
@@ -204,6 +203,15 @@ const OrderListPage: React.FC = () => {
           scroll={{ x: 'max-content' }}
         />
       </Spin>
+      
+      <DetailModal<Order>
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        record={selectedOrder}
+        title={selectedOrder ? `Order Details (ID: ${selectedOrder.id || 'Unknown'})` : 'Order Details'}
+        renderContent={renderOrderDetails}
+        width={600}
+      />
     </div>
   );
 };

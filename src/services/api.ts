@@ -1,19 +1,20 @@
 import axios from 'axios';
+import authService from './authService';
 
 const apiClient = axios.create({
-  baseURL: '/api', // Assuming backend is served under /api proxy
+  baseURL: 'https://api.yensao24h.com',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add a request interceptor (optional, e.g., for adding auth tokens)
+// Add a request interceptor for adding auth tokens
 apiClient.interceptors.request.use(
   (config) => {
-    // const token = localStorage.getItem('authToken'); // Example: Get token
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = authService.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -21,22 +22,43 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add a response interceptor (optional, e.g., for global error handling)
+// Add a response interceptor for handling token refresh
 apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    // Handle errors globally (e.g., redirect on 401)
-    console.error('API Error:', error.response || error.message);
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If error is 401 Unauthorized and we haven't tried to refresh yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Attempt to refresh token
+        const newToken = await authService.refreshToken();
+        
+        // Update the failed request with new token and retry
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return axios(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, redirect to login
+        console.error('Token refresh failed, redirecting to login');
+        authService.logout();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    // For other errors, just reject the promise
     return Promise.reject(error);
   }
 );
 
 export const apiService = {
   get: <T>(url: string, params?: object) => apiClient.get<T>(url, { params }),
-  post: <T>(url: string, data: unknown) => apiClient.post<T>(url, data), // Change any to unknown
-  patch: <T>(url: string, data: unknown) => apiClient.patch<T>(url, data), // Change any to unknown
+  post: <T>(url: string, data: unknown) => apiClient.post<T>(url, data),
+  patch: <T>(url: string, data: unknown) => apiClient.patch<T>(url, data),
   delete: <T>(url: string) => apiClient.delete<T>(url),
   // You can add more specific methods if needed
 };

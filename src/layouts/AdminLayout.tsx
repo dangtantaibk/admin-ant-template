@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
 import {
+  LogoutOutlined,
+  SettingOutlined,
   ShoppingCartOutlined,
-  BookOutlined,
-  ProductOutlined,
-  NotificationOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme, Typography } from 'antd';
+import React, { useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const { Header, Content, Footer, Sider } = Layout;
+const { Text } = Typography;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -28,28 +30,58 @@ function getItem(
 }
 
 const items: MenuItem[] = [
-  // getItem('Dashboard', '/admin', <PieChartOutlined />), // Optional Dashboard
   getItem(<Link to="/admin/orders">Orders</Link>, '/admin/orders', <ShoppingCartOutlined />),
-  getItem(<Link to="/admin/subscriptions">Subscriptions</Link>, '/admin/subscriptions', <NotificationOutlined />),
-  getItem(<Link to="/admin/products">Products</Link>, '/admin/products', <ProductOutlined />),
-  getItem(<Link to="/admin/blog-posts">Blog Posts</Link>, '/admin/blog-posts', <BookOutlined />),
-  // Example with sub-menu if needed later
-  // getItem('User', 'sub1', <UserOutlined />, [
-  //   getItem('Tom', '3'),
-  //   getItem('Bill', '4'),
-  //   getItem('Alex', '5'),
-  // ]),
+  // getItem(<Link to="/admin/subscriptions">Subscriptions</Link>, '/admin/subscriptions', <NotificationOutlined />),
+  // getItem(<Link to="/admin/products">Products</Link>, '/admin/products', <ProductOutlined />),
+  // getItem(<Link to="/admin/blog-posts">Blog Posts</Link>, '/admin/blog-posts', <BookOutlined />),
 ];
 
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
   // Determine selected keys based on current path
   const selectedKeys = [location.pathname];
+
+  // User dropdown menu items
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'user-info',
+      label: (
+        <div style={{ padding: '4px 0' }}>
+          <Text strong>{user?.fullName || user?.username}</Text><br />
+          <Text type="secondary" style={{ fontSize: '12px' }}>{user?.email}</Text>
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: 'divider' },
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'My Profile',
+      onClick: () => navigate('/admin/profile'),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+      onClick: () => navigate('/admin/profile#settings'),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: logout,
+    },
+  ];
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -58,12 +90,25 @@ const AdminLayout: React.FC = () => {
         <Menu theme="dark" selectedKeys={selectedKeys} mode="inline" items={items} />
       </Sider>
       <Layout>
-        <Header style={{ padding: '0 16px', background: colorBgContainer }}>
-            {/* Header Content can go here - e.g., User profile dropdown */}
+        <Header style={{ padding: '0 16px', background: colorBgContainer, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+            <Space className="user-profile-dropdown" style={{ cursor: 'pointer', padding: '8px' }}>
+              <Avatar 
+                icon={<UserOutlined />} 
+                src={user?.avatarUrl}
+                style={{ backgroundColor: user?.avatarUrl ? 'transparent' : '#1677ff' }}
+              />
+              {!collapsed && (
+                <Space direction="vertical" style={{ lineHeight: '1.2' }}>
+                  <Text strong style={{ marginBottom: 0 }}>{user?.fullName || user?.username}</Text>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>{user?.roles?.join(', ')}</Text>
+                </Space>
+              )}
+            </Space>
+          </Dropdown>
         </Header>
         <Content style={{ margin: '0 16px' }}>
           <Breadcrumb style={{ margin: '16px 0' }}>
-            {/* Basic Breadcrumb - can be made dynamic later */}
             <Breadcrumb.Item>Admin</Breadcrumb.Item>
             <Breadcrumb.Item>{location.pathname.split('/').pop()?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</Breadcrumb.Item>
           </Breadcrumb>
@@ -75,7 +120,6 @@ const AdminLayout: React.FC = () => {
               borderRadius: borderRadiusLG,
             }}
           >
-            {/* Protected Route Content will be rendered here */}
             <Outlet />
           </div>
         </Content>
