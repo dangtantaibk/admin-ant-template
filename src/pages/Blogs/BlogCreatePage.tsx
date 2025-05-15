@@ -48,28 +48,12 @@ const BlogCreatePage: React.FC = () => {
     }
   };
 
-  const handleAddTag = (tag: string) => {
-    if (!tagOptions.includes(tag)) {
-      setTagOptions([...tagOptions, tag]);
-    }
-    return tag;
-  };
-
-  // TinyMCE editor initialization options
-  const editorInitOptions = {
-    height: 300,
-    menubar: false,
-    plugins: [
-      'advlist', 'autolink', 'lists', 'link', 'image', 'charmap',
-      'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-      'insertdatetime', 'media', 'table', 'preview', 'help', 'wordcount'
-    ],
-    toolbar: 'undo redo | formatselect | ' +
-      'bold italic backcolor | alignleft aligncenter ' +
-      'alignright alignjustify | bullist numlist outdent indent | ' +
-      'removeformat | image link | help',
-    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-  };
+  // const handleAddTag = (tag: string) => {
+  //   if (!tagOptions.includes(tag)) {
+  //     setTagOptions([...tagOptions, tag]);
+  //   }
+  //   return tag;
+  // };
 
   // Generate slug from title
   const generateSlug = (title: string) => {

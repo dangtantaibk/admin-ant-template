@@ -24,7 +24,7 @@ import apiService from '../../services/api';
 import { Blog, BlogFormValues } from './types';
 
 const { Title } = Typography;
-const { Option } = Select;
+// const { Option } = Select;
 
 // Define mapping function for blog
 const mapBlogDetail = (item: any): Blog => ({
@@ -191,12 +191,12 @@ const BlogDetailPage: React.FC = () => {
     navigate('/admin/blogs');
   };
 
-  const handleAddTag = (tag: string) => {
-    if (!tagOptions.includes(tag)) {
-      setTagOptions([...tagOptions, tag]);
-    }
-    return tag;
-  };
+  // const handleAddTag = (tag: string) => {
+  //   if (!tagOptions.includes(tag)) {
+  //     setTagOptions([...tagOptions, tag]);
+  //   }
+  //   return tag;
+  // };
 
   if (loading) {
     return (

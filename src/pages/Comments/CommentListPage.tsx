@@ -1,20 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DeleteOutlined, EditOutlined, EyeOutlined, InfoCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
-import { Button, Modal, Spin, Table, Typography, Tag, message, Tooltip } from 'antd';
+import { Button, message, Modal, Spin, Table, Tag, Tooltip, Typography } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import DetailModal from '../../components/DetailModal';
 import ErrorHandler from '../../components/ErrorHandler';
 import PageHeader from '../../components/PageHeader';
 import { useDataFetching } from '../../hooks/useDataFetching';
 import apiService from '../../services/api';
-import { Comment, CommentFormData } from './types';
 import CommentForm from './CommentForm';
+import { Comment, CommentFormData } from './types';
 
-const { Text, Paragraph } = Typography;
+const { Paragraph } = Typography;
 
 // Define mapping function for comments
 const mapCommentData = (item: any): Comment => ({

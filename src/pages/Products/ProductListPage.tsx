@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DeleteOutlined, EyeOutlined, InfoCircleOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
-import { Button, Image, message, Modal, Spin, Table, Typography } from 'antd';
+import { Button, Image, message, Modal, Spin, Table } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -13,7 +13,7 @@ import { useDataFetching } from '../../hooks/useDataFetching';
 import apiService from '../../services/api';
 import { Product } from './types';
 
-const { Text } = Typography;
+// const { Text } = Typography;
 
 // Define mapping function for products
 const mapProductData = (item: any): Product => ({

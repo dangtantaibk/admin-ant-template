@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DeleteOutlined, EditOutlined, EyeOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
-import { Button, Image, message, Modal, Space, Spin, Table, Tag, Typography } from 'antd';
+import { Button, Image, message, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DetailModal from '../../components/DetailModal';
 import ErrorHandler from '../../components/ErrorHandler';
 import { useDataFetching } from '../../hooks/useDataFetching';
@@ -33,7 +33,7 @@ const mapBlogData = (item: any): Blog => ({
 });
 
 const BlogListPage: React.FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   
   // Use our custom hook for data fetching
   const { 
@@ -322,13 +322,13 @@ const BlogListPage: React.FC = () => {
     },
   ];
 
-  const handleRefresh = () => {
-    refreshData();
-  };
+  // const handleRefresh = () => {
+  //   refreshData();
+  // };
 
-  const handleEdit = (id: string) => {
-    navigate(`/admin/blogs/edit/${id}`);
-  };
+  // const handleEdit = (id: string) => {
+  //   navigate(`/admin/blogs/edit/${id}`);
+  // };
 
   return (
     <div className="blog-list-container" style={{ width: '100%' }}>
