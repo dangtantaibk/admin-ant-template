@@ -16,12 +16,13 @@ import {
   notification,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ErrorHandler from '../../components/ErrorHandler';
 import { useDetailFetching } from '../../hooks/useDetailFetching';
 import apiService from '../../services/api';
 import { Blog, BlogFormValues } from './types';
+import Quill from 'quill';
 
 const { Title } = Typography;
 // const { Option } = Select;
@@ -54,29 +55,7 @@ const BlogDetailPage: React.FC = () => {
   };
 
   // Update useQuill hook to include configuration options
-  const { quill, quillRef } = useQuill({
-    modules: {
-      toolbar: [
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        ['link', 'image'],
-        [{ color: [] }, { background: [] }],
-        [{ align: [] }],
-        ['clean']
-      ]
-    },
-    formats: [
-      'bold', 'italic', 'underline', 'strike',
-      'list', 'bullet', 'indent',
-      'header',
-      'link', 'image',
-      'color', 'background',
-      'align'
-    ],
-    theme: 'snow'
-  });
+  const { quill } = useQuill();
   
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -98,23 +77,88 @@ const BlogDetailPage: React.FC = () => {
     }
   }, [id, notificationApi]);
 
-  // useEffect(() => {
-  //   // Create a direct DOM element as a test
-  //   const div = document.createElement('div');
-  //   div.innerText = 'Notification test';
-  //   div.style.position = 'fixed';
-  //   div.style.top = '20px';
-  //   div.style.right = '20px';
-  //   div.style.background = 'green';
-  //   div.style.color = 'white';
-  //   div.style.padding = '10px';
-  //   div.style.zIndex = '9999';
-  //   document.body.appendChild(div);
-    
-  //   setTimeout(() => {
-  //     document.body.removeChild(div);
-  //   }, 3000);
-  // }, []);
+const quillRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Quill | null>(null);
+  const toolbarOptions = [
+    // Text formatting
+    ['bold', 'italic', 'underline', 'strike'],
+    ['blockquote', 'code-block'],
+
+    // Headers
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    // Font styling
+    [{ 'font': [] }],
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+
+    // Text alignment
+    [{ 'align': [] }],
+
+    // Lists and indentation
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'indent': '-1' }, { 'indent': '+1' }],
+
+    // Text direction
+    [{ 'direction': 'rtl' }],
+
+    // Colors
+    [{ 'color': [] }, { 'background': [] }],
+
+    // Superscript/subscript
+    [{ 'script': 'sub' }, { 'script': 'super' }],
+
+    // Media and links
+    ['link', 'image', 'video', 'formula'],
+
+    // Clean formatting
+    ['clean']
+  ];
+
+  const formatOptions = [
+    // Text formatting
+    'bold', 'italic', 'underline', 'strike',
+    'blockquote', 'code-block',
+
+    // Headers
+    'header',
+
+    // Font styling
+    'font', 'size',
+
+    // Text alignment
+    'align',
+
+    // Lists and indentation
+    'list', 'indent',
+
+    // Text direction
+    'direction',
+
+    // Colors
+    'color', 'background',
+
+    // Superscript/subscript
+    'script',
+
+    // Media and links
+    'link', 'image', 'video', 'formula',
+
+    // Other formats
+    // 'clean'
+  ];
+
+  useEffect(() => {
+    if (quillRef.current && !editorRef.current) {
+      editorRef.current = new Quill(quillRef.current, {
+        theme: 'snow',
+        modules: {
+          toolbar: toolbarOptions,
+        },
+        formats: formatOptions,
+      });
+    }
+  }, []);
 
   // Use our custom hook for data fetching
   const {
@@ -128,6 +172,8 @@ const BlogDetailPage: React.FC = () => {
     id,
     mappingFunction: mapBlogDetail,
   });
+
+
 
   const [submitting, setSubmitting] = useState(false);
   const [tagOptions, setTagOptions] = useState<string[]>([

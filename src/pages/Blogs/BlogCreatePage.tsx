@@ -11,7 +11,7 @@ import {
   Typography
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // import { Editor } from '@tinymce/tinymce-react';
 import { useQuill } from 'react-quilljs';
 import 'quill/dist/quill.snow.css';
@@ -19,13 +19,12 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import apiService from '../../services/api';
 import { BlogFormValues } from './types';
+import Quill from 'quill';
 
 const { Title } = Typography;
 
 const BlogCreatePage: React.FC = () => {
-  const { quill, quillRef } = useQuill();
-  console.log(quill);    // undefined > Quill Object
-  console.log(quillRef); // { current: undefined } > { current: Quill Editor Reference }
+  const { quill } = useQuill();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -33,6 +32,100 @@ const BlogCreatePage: React.FC = () => {
     'health', 'nutrition', 'traditional-medicine', 'wellness',
     'birds-nest', 'beauty', 'recipes', 'lifestyle'
   ]);
+
+
+  const quillRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Quill | null>(null);
+  const toolbarOptions = [
+    // Text formatting
+    ['bold', 'italic', 'underline', 'strike'],
+    ['blockquote', 'code-block'],
+
+    // Headers
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    // Font styling
+    [{ 'font': [] }],
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+
+    // Text alignment
+    [{ 'align': [] }],
+
+    // Lists and indentation
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    [{ 'indent': '-1' }, { 'indent': '+1' }],
+
+    // Text direction
+    [{ 'direction': 'rtl' }],
+
+    // Colors
+    [{ 'color': [] }, { 'background': [] }],
+
+    // Superscript/subscript
+    [{ 'script': 'sub' }, { 'script': 'super' }],
+
+    // Media and links
+    ['link', 'image', 'video', 'formula'],
+
+    // Clean formatting
+    ['clean']
+  ];
+
+  const formatOptions = [
+    // Text formatting
+    'bold', 'italic', 'underline', 'strike',
+    'blockquote', 'code-block',
+
+    // Headers
+    'header',
+
+    // Font styling
+    'font', 'size',
+
+    // Text alignment
+    'align',
+
+    // Lists and indentation
+    'list', 'indent',
+
+    // Text direction
+    'direction',
+
+    // Colors
+    'color', 'background',
+
+    // Superscript/subscript
+    'script',
+
+    // Media and links
+    'link', 'image', 'video', 'formula',
+
+    // Other formats
+    // 'clean'
+  ];
+
+  useEffect(() => {
+    if (quillRef.current && !editorRef.current) {
+      editorRef.current = new Quill(quillRef.current, {
+        theme: 'snow',
+        modules: {
+          toolbar: toolbarOptions,
+        },
+        formats: formatOptions,
+      });
+    }
+  }, []);
+
+  // Add effect to handle content changes
+  useEffect(() => {
+    if (quill) {
+      quill.on('text-change', () => {
+        const content = quill.root.innerHTML;
+        form.setFieldsValue({ content });
+      });
+    }
+  }, [quill, form]);
 
   const handleCreate = async (values: BlogFormValues) => {
     setSubmitting(true);
@@ -47,13 +140,6 @@ const BlogCreatePage: React.FC = () => {
       setSubmitting(false);
     }
   };
-
-  // const handleAddTag = (tag: string) => {
-  //   if (!tagOptions.includes(tag)) {
-  //     setTagOptions([...tagOptions, tag]);
-  //   }
-  //   return tag;
-  // };
 
   // Generate slug from title
   const generateSlug = (title: string) => {
