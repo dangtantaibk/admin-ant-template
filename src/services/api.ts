@@ -41,17 +41,17 @@ apiClient.interceptors.response.use(
         
         // Call refresh token API
         const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken: refreshToken
+          refresh_token: refreshToken
         });
         
         // Store the new tokens
-        tokenService.setTokens(response.data.accessToken, response.data.refreshToken);
+        tokenService.setTokens(response.data.access_token, response.data.refresh_token);
         
         // Update the failed request with new token and retry
-        originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
         return axios(originalRequest);
       } catch (refreshError) {
-        console.error('Token refresh failed, redirecting to login');
+        console.error('Token refresh failed, redirecting to login', refreshError);
         // Clear tokens
         tokenService.clearTokens();
         // Redirect to login page

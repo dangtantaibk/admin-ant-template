@@ -18,8 +18,17 @@ import RoleFormPage from './pages/Roles/RoleFormPage';
 import UserListPage from './pages/Users/UserListPage';
 import UserDetailPage from './pages/Users/UserDetailPage';
 import UserFormPage from './pages/Users/UserFormPage';
+// Import product management pages
+import ProductListPage from './pages/Products/ProductListPage';
+import ProductDetailPage from './pages/Products/ProductDetailPage';
+import ProductFormPage from './pages/Products/ProductFormPage';
 
-// Import user management pages
+import BlogListPage from './pages/Blogs/BlogListPage';
+import BlogDetailPage from './pages/Blogs/BlogDetailPage';
+import BlogCreatePage from './pages/Blogs/BlogCreatePage';
+
+import CommentListPage from './pages/Comments/CommentListPage';
+// import CommentForm from './pages/Comments/CommentForm';
 
 // Protected Route Component
 const ProtectedRoute: React.FC = () => {
@@ -88,6 +97,26 @@ const AppRoutes: React.FC = () => {
               <Route path=":id" element={<UserDetailPage />} />
               <Route path="new" element={<UserFormPage />} />
               <Route path="edit/:id" element={<UserFormPage />} />
+            </Route>
+            
+            {/* Products Routes */}
+            <Route path="products">
+              <Route index element={<ProductListPage />} />
+              <Route path=":id" element={<ProductDetailPage />} />
+              <Route path="new" element={<ProductFormPage />} />
+              <Route path="edit/:id" element={<ProductFormPage />} />
+            </Route>
+
+            {/* Blogs Routes */}
+            <Route path="blogs">
+              <Route index element={<BlogListPage />} />
+              <Route path=":id" element={<BlogDetailPage />} />
+              <Route path="create" element={<BlogCreatePage />} />
+              <Route path="edit/:id" element={<BlogDetailPage />} />
+            </Route>
+            {/* Comments Routes */}
+            <Route path="comments">
+              <Route index element={<CommentListPage />} />
             </Route>
             
             {/* Profile Route */}

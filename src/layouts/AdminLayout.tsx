@@ -1,16 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   LogoutOutlined,
   SettingOutlined,
   ShoppingCartOutlined,
   UserOutlined,
   KeyOutlined,
-  TeamOutlined
+  TeamOutlined,
+  ShoppingOutlined,
+  CommentOutlined
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme, Typography } from 'antd';
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { BookOutlined } from '@ant-design/icons';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Text } = Typography;
@@ -33,11 +37,13 @@ function getItem(
 
 const items: MenuItem[] = [
   getItem(<Link to="/admin/orders">Orders</Link>, '/admin/orders', <ShoppingCartOutlined />),
+  getItem(<Link to="/admin/products">Products</Link>, '/admin/products', <ShoppingOutlined />),
   getItem(<Link to="/admin/roles">Roles</Link>, '/admin/roles', <KeyOutlined />),
   getItem(<Link to="/admin/users">Users</Link>, '/admin/users', <TeamOutlined />),
+  getItem(<Link to="/admin/blogs">Blogs</Link>, '/admin/blogs', <BookOutlined />),
+  getItem(<Link to="/admin/comments">Comments</Link>, '/admin/comments', <CommentOutlined />),
   // getItem(<Link to="/admin/subscriptions">Subscriptions</Link>, '/admin/subscriptions', <NotificationOutlined />),
-  // getItem(<Link to="/admin/products">Products</Link>, '/admin/products', <ProductOutlined />),
-  // getItem(<Link to="/admin/blog-posts">Blog Posts</Link>, '/admin/blog-posts', <BookOutlined />),
+
 ];
 
 const AdminLayout: React.FC = () => {

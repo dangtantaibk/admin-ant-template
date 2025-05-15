@@ -1,0 +1,404 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ArrowLeftOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
+// import { Editor } from '@tinymce/tinymce-react';
+import { useQuill } from 'react-quilljs';
+import 'quill/dist/quill.snow.css';
+import {
+  Button,
+  Card,
+  Form,
+  Image,
+  Input,
+  Select,
+  Spin,
+  Typography,
+  notification,
+} from 'antd';
+import TextArea from 'antd/es/input/TextArea';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import ErrorHandler from '../../components/ErrorHandler';
+import { useDetailFetching } from '../../hooks/useDetailFetching';
+import apiService from '../../services/api';
+import { Blog, BlogFormValues } from './types';
+
+const { Title } = Typography;
+const { Option } = Select;
+
+// Define mapping function for blog
+const mapBlogDetail = (item: any): Blog => ({
+  id: item.id || '',
+  title: item.title || '',
+  description: item.description || '',
+  content: item.content || '',
+  image: item.image || '',
+  date: item.date || '',
+  author: item.author || '',
+  slug: item.slug || '',
+  category: item.category || '',
+  readTime: item.readTime || '',
+  tags: item.tags || [],
+  business: item.business || 'yen-sao',
+});
+
+const BlogDetailPage: React.FC = () => {
+  const [notificationApi, contextHolder] = notification.useNotification();
+  const openNotification = (pauseOnHover: boolean, title: string, description: string) => {
+    notificationApi.open({
+      message: title,
+      description: description,
+      showProgress: true,
+      pauseOnHover,
+    });
+  };
+
+  // Update useQuill hook to include configuration options
+  const { quill, quillRef } = useQuill({
+    modules: {
+      toolbar: [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ indent: '-1' }, { indent: '+1' }],
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        ['link', 'image'],
+        [{ color: [] }, { background: [] }],
+        [{ align: [] }],
+        ['clean']
+      ]
+    },
+    formats: [
+      'bold', 'italic', 'underline', 'strike',
+      'list', 'bullet', 'indent',
+      'header',
+      'link', 'image',
+      'color', 'background',
+      'align'
+    ],
+    theme: 'snow'
+  });
+  
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const isEditing = window.location.pathname.includes('/edit');
+
+  useEffect(() => {
+    if (id) {
+      console.log('=======Blog ID:', id);
+      
+      // Try STATIC notification method (doesn't require contextHolder)
+      notification.success({
+        message: 'Blog Detail Loaded',
+        description: `You are viewing details for blog ${id}`,
+        duration: 4.5,
+        placement: 'topRight', // Explicitly set placement
+      });
+      
+    }
+  }, [id, notificationApi]);
+
+  // useEffect(() => {
+  //   // Create a direct DOM element as a test
+  //   const div = document.createElement('div');
+  //   div.innerText = 'Notification test';
+  //   div.style.position = 'fixed';
+  //   div.style.top = '20px';
+  //   div.style.right = '20px';
+  //   div.style.background = 'green';
+  //   div.style.color = 'white';
+  //   div.style.padding = '10px';
+  //   div.style.zIndex = '9999';
+  //   document.body.appendChild(div);
+    
+  //   setTimeout(() => {
+  //     document.body.removeChild(div);
+  //   }, 3000);
+  // }, []);
+
+  // Use our custom hook for data fetching
+  const {
+    data: blog,
+    loading,
+    error,
+    hasError,
+    handleRetry,
+  } = useDetailFetching<Blog>({
+    endpoint: '/blogs',
+    id,
+    mappingFunction: mapBlogDetail,
+  });
+
+  const [submitting, setSubmitting] = useState(false);
+  const [tagOptions, setTagOptions] = useState<string[]>([
+    'health', 'nutrition', 'traditional-medicine', 'wellness',
+    'birds-nest', 'beauty', 'recipes', 'lifestyle'
+  ]);
+
+  useEffect(() => {
+    if (blog && form) {
+      // Set form values when blog data is available
+      form.setFieldsValue({
+        title: blog.title,
+        description: blog.description,
+        content: blog.content,
+        image: blog.image,
+        date: blog.date,
+        author: blog.author,
+        slug: blog.slug,
+        category: blog.category,
+        readTime: blog.readTime,
+        tags: blog.tags,
+        business: blog.business,
+      });
+    }
+  }, [blog, form]);
+
+  // Add effect to set up the Quill editor with initial content when ready
+  useEffect(() => {
+    if (quill && blog && blog.content) {
+      quill.clipboard.dangerouslyPasteHTML(blog.content);
+    }
+  }, [quill, blog]);
+
+  // Add effect to handle content changes
+  useEffect(() => {
+    if (quill) {
+      quill.on('text-change', () => {
+        const content = quill.root.innerHTML;
+        form.setFieldsValue({ content });
+      });
+    }
+  }, [quill, form]);
+
+  const handleSave = async (values: BlogFormValues) => {
+    if (!id) return;
+
+    setSubmitting(true);
+    try {
+      await apiService.patch(`/blogs/${id}`, values);
+      openNotification(true, 'Blog updated successfully', '111');
+      navigate('/admin/blogs');
+    } catch (err: any) {
+      console.error('Error updating blog:', err);
+      openNotification(true, 'Error updating blog', err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    navigate('/admin/blogs');
+  };
+
+  const handleAddTag = (tag: string) => {
+    if (!tagOptions.includes(tag)) {
+      setTagOptions([...tagOptions, tag]);
+    }
+    return tag;
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (hasError && !loading) {
+    return <ErrorHandler error={error || "Failed to load blog details"} hasError={true} onRetry={handleRetry} />;
+  }
+
+  const headerTitle = isEditing ? "Edit Blog" : "Blog Details";
+  const headerExtra = isEditing ? (
+    <Button
+      type="primary"
+      icon={<SaveOutlined />}
+      onClick={form.submit}
+      loading={submitting}
+    >
+      Save Changes
+    </Button>
+  ) : (
+    <>
+      <Button
+        icon={<ReloadOutlined />}
+        onClick={handleRetry}
+        style={{ marginRight: 8 }}
+      >
+        Refresh
+      </Button>
+      <Link to={`/admin/blogs/edit/${id}`}>
+        <Button type="primary">
+          Edit Blog
+        </Button>
+      </Link>
+    </>
+  );
+
+  return (
+    <div className="blog-detail-container">
+      {contextHolder}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={handleGoBack}
+            style={{ marginRight: 16 }}
+          >
+            Back to Blogs
+          </Button>
+          <Title level={4} style={{ margin: 0 }}>{headerTitle}</Title>
+        </div>
+        <div>
+          {headerExtra}
+        </div>
+      </div>
+
+      <Card>
+        {!isEditing && blog ? (
+          <div className="blog-view">
+            <div style={{ marginBottom: 20, textAlign: 'center' }}>
+              <Image
+                src={blog.image}
+                alt={blog.title}
+                style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
+              />
+            </div>
+            <Title level={2}>{blog.title}</Title>
+            <p><strong>Author:</strong> {blog.author}</p>
+            <p><strong>Date:</strong> {blog.date}</p>
+            <p><strong>Read Time:</strong> {blog.readTime}</p>
+            <p><strong>Category:</strong> {blog.category}</p>
+            <p><strong>Tags:</strong> {blog.tags?.join(', ')}</p>
+            <p><strong>Slug:</strong> {blog.slug}</p>
+            <p><strong>Business:</strong> {blog.business}</p>
+            <div style={{ marginTop: 20 }}>
+              <Title level={4}>Description</Title>
+              <p>{blog.description}</p>
+            </div>
+            <div style={{ marginTop: 20 }}>
+              <Title level={4}>Content</Title>
+              <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+            </div>
+          </div>
+        ) : (
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSave}
+            initialValues={{
+              business: 'yen-sao',
+              tags: []
+            }}
+          >
+            <Form.Item
+              name="business"
+              label="Business"
+              rules={[{ required: true, message: 'Please enter business' }]}
+            >
+              <Input placeholder="Business" />
+            </Form.Item>
+
+            <Form.Item
+              name="title"
+              label="Title"
+              rules={[{ required: true, message: 'Please enter blog title' }]}
+            >
+              <Input placeholder="Enter blog title" />
+            </Form.Item>
+
+            <Form.Item
+              name="slug"
+              label="Slug"
+              rules={[{ required: true, message: 'Please enter slug' }]}
+            >
+              <Input placeholder="Enter slug (URL-friendly name)" />
+            </Form.Item>
+
+            <Form.Item
+              name="author"
+              label="Author"
+              rules={[{ required: true, message: 'Please enter author name' }]}
+            >
+              <Input placeholder="Enter author name" />
+            </Form.Item>
+
+            <Form.Item
+              name="image"
+              label="Image URL"
+              rules={[{ required: true, message: 'Please enter image URL' }]}
+            >
+              <Input placeholder="Enter image URL" />
+            </Form.Item>
+
+            <Form.Item
+              name="date"
+              label="Date"
+              rules={[{ required: true, message: 'Please enter date' }]}
+            >
+              <Input placeholder="YYYY-MM-DD" />
+            </Form.Item>
+
+            <Form.Item
+              name="readTime"
+              label="Read Time"
+              rules={[{ required: true, message: 'Please enter read time' }]}
+            >
+              <Input placeholder="e.g., 5 min" />
+            </Form.Item>
+
+            <Form.Item
+              name="category"
+              label="Category"
+              rules={[{ required: true, message: 'Please enter category' }]}
+            >
+              <Input placeholder="Enter category" />
+            </Form.Item>
+
+            <Form.Item
+              name="tags"
+              label="Tags"
+              rules={[{ required: true, message: 'Please select at least one tag' }]}
+            >
+              <Select
+                mode="tags"
+                style={{ width: '100%' }}
+                placeholder="Select tags"
+                options={tagOptions.map(tag => ({ label: tag, value: tag }))}
+                onChange={(values: string[]) => {
+                  // Check for new tags
+                  const newValues = values.filter(val => !tagOptions.includes(val));
+                  if (newValues.length > 0) {
+                    setTagOptions(prev => [...prev, ...newValues]);
+                  }
+                }}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="description"
+              label="Description"
+              rules={[{ required: true, message: 'Please enter description' }]}
+            >
+              <TextArea rows={4} placeholder="Enter blog description" />
+            </Form.Item>
+
+            <Form.Item
+              name="content"
+              label="Content"
+              rules={[{ required: true, message: 'Please enter content' }]}
+            >
+              <div style={{ width: '100%', height: 400, marginBottom: 50 }}>
+                <div ref={quillRef} style={{ height: '100%' }} />
+              </div>
+            </Form.Item>
+          </Form>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+export default BlogDetailPage;

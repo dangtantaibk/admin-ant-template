@@ -58,9 +58,10 @@ export const authService = {
 
     try {
       const response = await authClient.post<AuthResponse>('/auth/refresh', {
-        refreshToken,
+        refresh_token: refreshToken,
       } as RefreshTokenRequest);
 
+      console.log('======== Token refresh response:', response.data);
       // Update stored tokens
       tokenService.setTokens(response.data.access_token, response.data.refresh_token);
 

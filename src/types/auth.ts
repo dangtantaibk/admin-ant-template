@@ -20,7 +20,7 @@ export interface LoginCredentials {
 }
 
 export interface RefreshTokenRequest {
-  refreshToken: string;
+  refresh_token: string;
 }
 
 // Auth context types
