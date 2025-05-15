@@ -13,5 +13,12 @@ export default defineConfig({
         secure: true,
       }
     }
-  }
+  },
+  preview: {
+    port: 3101,
+    host: true,
+    allowedHosts: ['admin.yensao24h.com']
+  },
+  // Ensure proper base path if needed
+  base: '/'
 })
