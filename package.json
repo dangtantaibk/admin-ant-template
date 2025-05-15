@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
-    "deploy": "npm run build && pm2 start ecosystem.config.js --env production",
+    "deploy": "npm run build && pm2 start ecosystem.config.cjs --env production",
     "stop": "pm2 stop admin-ant-template",
     "restart": "pm2 restart admin-ant-template"
   },
