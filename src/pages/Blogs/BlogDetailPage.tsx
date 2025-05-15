@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowLeftOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
 // import { Editor } from '@tinymce/tinymce-react';
-import { useQuill } from 'react-quilljs';
 import 'quill/dist/quill.snow.css';
 import {
   Button,
@@ -54,9 +53,6 @@ const BlogDetailPage: React.FC = () => {
     });
   };
 
-  // Update useQuill hook to include configuration options
-  const { quill } = useQuill();
-  
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -65,7 +61,7 @@ const BlogDetailPage: React.FC = () => {
   useEffect(() => {
     if (id) {
       console.log('=======Blog ID:', id);
-      
+
       // Try STATIC notification method (doesn't require contextHolder)
       notification.success({
         message: 'Blog Detail Loaded',
@@ -73,11 +69,11 @@ const BlogDetailPage: React.FC = () => {
         duration: 4.5,
         placement: 'topRight', // Explicitly set placement
       });
-      
+
     }
   }, [id, notificationApi]);
 
-const quillRef = useRef<HTMLDivElement>(null);
+  const quillRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Quill | null>(null);
   const toolbarOptions = [
     // Text formatting
@@ -202,20 +198,22 @@ const quillRef = useRef<HTMLDivElement>(null);
 
   // Add effect to set up the Quill editor with initial content when ready
   useEffect(() => {
-    if (quill && blog && blog.content) {
-      quill.clipboard.dangerouslyPasteHTML(blog.content);
+    if (editorRef.current && blog && blog.content) {
+      editorRef.current.clipboard.dangerouslyPasteHTML(blog.content);
     }
-  }, [quill, blog]);
+  }, [editorRef, blog]);
 
   // Add effect to handle content changes
   useEffect(() => {
-    if (quill) {
-      quill.on('text-change', () => {
-        const content = quill.root.innerHTML;
-        form.setFieldsValue({ content });
+    if (editorRef.current) {
+      editorRef.current.on('text-change', () => {
+        if (editorRef.current) {
+          const content = editorRef.current.root.innerHTML;
+          form.setFieldsValue({ content });
+        }
       });
     }
-  }, [quill, form]);
+  }, [editorRef, form]);
 
   const handleSave = async (values: BlogFormValues) => {
     if (!id) return;

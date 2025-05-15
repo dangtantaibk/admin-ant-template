@@ -12,8 +12,6 @@ import {
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { useEffect, useRef, useState } from 'react';
-// import { Editor } from '@tinymce/tinymce-react';
-import { useQuill } from 'react-quilljs';
 import 'quill/dist/quill.snow.css';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
@@ -24,7 +22,6 @@ import Quill from 'quill';
 const { Title } = Typography;
 
 const BlogCreatePage: React.FC = () => {
-  const { quill } = useQuill();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -119,13 +116,15 @@ const BlogCreatePage: React.FC = () => {
 
   // Add effect to handle content changes
   useEffect(() => {
-    if (quill) {
-      quill.on('text-change', () => {
-        const content = quill.root.innerHTML;
-        form.setFieldsValue({ content });
+    if (editorRef.current) {
+      editorRef.current.on('text-change', () => {
+        if (editorRef.current) {
+          const content = editorRef.current.root.innerHTML;
+          form.setFieldsValue({ content });
+        }
       });
     }
-  }, [quill, form]);
+  }, [editorRef, form]);
 
   const handleCreate = async (values: BlogFormValues) => {
     setSubmitting(true);
