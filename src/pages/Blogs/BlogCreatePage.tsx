@@ -21,19 +21,7 @@ import Quill from 'quill';
 
 const { Title } = Typography;
 
-const BlogCreatePage: React.FC = () => {
-  const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const [submitting, setSubmitting] = useState(false);
-  const [tagOptions, setTagOptions] = useState<string[]>([
-    'health', 'nutrition', 'traditional-medicine', 'wellness',
-    'birds-nest', 'beauty', 'recipes', 'lifestyle'
-  ]);
-
-
-  const quillRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Quill | null>(null);
-  const toolbarOptions = [
+const toolbarOptions = [
     // Text formatting
     ['bold', 'italic', 'underline', 'strike'],
     ['blockquote', 'code-block'],
@@ -101,6 +89,19 @@ const BlogCreatePage: React.FC = () => {
     // Other formats
     // 'clean'
   ];
+  
+const BlogCreatePage: React.FC = () => {
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
+  const [tagOptions, setTagOptions] = useState<string[]>([
+    'health', 'nutrition', 'traditional-medicine', 'wellness',
+    'birds-nest', 'beauty', 'recipes', 'lifestyle'
+  ]);
+
+
+  const quillRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Quill | null>(null);
 
   useEffect(() => {
     if (quillRef.current && !editorRef.current) {
@@ -281,16 +282,8 @@ const BlogCreatePage: React.FC = () => {
             label="Content"
             rules={[{ required: true, message: 'Please enter content' }]}
           >
-            {/* <Editor
-              apiKey="your-tinymce-api-key" // Get a free API key from TinyMCE
-              init={editorInitOptions}
-              onEditorChange={(content) => {
-                form.setFieldsValue({ content });
-              }}
-              initialValue=""
-            /> */}
-            <div style={{ width: 500, height: 300 }}>
-              <div ref={quillRef} />
+            <div style={{ width: '100%', height: 400, marginBottom: 50 }}>
+              <div ref={quillRef} style={{ height: '100%' }} />
             </div>
           </Form.Item>
         </Form>

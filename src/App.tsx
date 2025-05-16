@@ -28,6 +28,7 @@ import BlogDetailPage from './pages/Blogs/BlogDetailPage';
 import BlogCreatePage from './pages/Blogs/BlogCreatePage';
 
 import CommentListPage from './pages/Comments/CommentListPage';
+import BlogUpdatePage from './pages/Blogs/BlogUpdatePage';
 // import CommentForm from './pages/Comments/CommentForm';
 
 // Protected Route Component
@@ -112,7 +113,7 @@ const AppRoutes: React.FC = () => {
               <Route index element={<BlogListPage />} />
               <Route path=":id" element={<BlogDetailPage />} />
               <Route path="create" element={<BlogCreatePage />} />
-              <Route path="edit/:id" element={<BlogDetailPage />} />
+              <Route path="edit/:id" element={<BlogUpdatePage />} />
             </Route>
             {/* Comments Routes */}
             <Route path="comments">

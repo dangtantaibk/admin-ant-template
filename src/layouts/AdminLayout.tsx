@@ -111,11 +111,11 @@ const AdminLayout: React.FC = () => {
               {!collapsed && (
                 <Space direction="vertical" style={{ lineHeight: '1.2' }}>
                   <Text strong style={{ marginBottom: 0 }}>{user?.fullName || user?.username}</Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                  {/* <Text type="secondary" style={{ fontSize: '12px' }}>
                     {user?.roles ? user.roles.map((role: any) =>
                       typeof role === 'object' ? role.name : role
                     ).join(', ') : 'No roles assigned'}
-                  </Text>
+                  </Text> */}
                 </Space>
               )}
             </Space>

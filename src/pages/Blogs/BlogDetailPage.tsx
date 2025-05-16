@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ArrowLeftOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
-// import { Editor } from '@tinymce/tinymce-react';
-import 'quill/dist/quill.snow.css';
 import {
   Button,
   Card,
@@ -22,6 +20,7 @@ import { useDetailFetching } from '../../hooks/useDetailFetching';
 import apiService from '../../services/api';
 import { Blog, BlogFormValues } from './types';
 import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 
 const { Title } = Typography;
 // const { Option } = Select;
@@ -41,8 +40,79 @@ const mapBlogDetail = (item: any): Blog => ({
   tags: item.tags || [],
   business: item.business || 'yen-sao',
 });
+const toolbarOptions = [
+  // Text formatting
+  ['bold', 'italic', 'underline', 'strike'],
+  ['blockquote', 'code-block'],
+
+  // Headers
+  [{ 'header': 1 }, { 'header': 2 }],
+  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+  // Font styling
+  [{ 'font': [] }],
+  [{ 'size': ['small', false, 'large', 'huge'] }],
+
+  // Text alignment
+  [{ 'align': [] }],
+
+  // Lists and indentation
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+  [{ 'indent': '-1' }, { 'indent': '+1' }],
+
+  // Text direction
+  [{ 'direction': 'rtl' }],
+
+  // Colors
+  [{ 'color': [] }, { 'background': [] }],
+
+  // Superscript/subscript
+  [{ 'script': 'sub' }, { 'script': 'super' }],
+
+  // Media and links
+  ['link', 'image', 'video', 'formula'],
+
+  // Clean formatting
+  ['clean']
+];
+
+const formatOptions = [
+  // Text formatting
+  'bold', 'italic', 'underline', 'strike',
+  'blockquote', 'code-block',
+
+  // Headers
+  'header',
+
+  // Font styling
+  'font', 'size',
+
+  // Text alignment
+  'align',
+
+  // Lists and indentation
+  'list', 'indent',
+
+  // Text direction
+  'direction',
+
+  // Colors
+  'color', 'background',
+
+  // Superscript/subscript
+  'script',
+
+  // Media and links
+  'link', 'image', 'video', 'formula',
+
+  // Other formats
+  // 'clean'
+];
 
 const BlogDetailPage: React.FC = () => {
+  const quillRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Quill | null>(null);
+
   const [notificationApi, contextHolder] = notification.useNotification();
   const openNotification = (pauseOnHover: boolean, title: string, description: string) => {
     notificationApi.open({
@@ -56,93 +126,7 @@ const BlogDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const isEditing = window.location.pathname.includes('/edit');
-
-  useEffect(() => {
-    if (id) {
-      console.log('=======Blog ID:', id);
-
-      // Try STATIC notification method (doesn't require contextHolder)
-      notification.success({
-        message: 'Blog Detail Loaded',
-        description: `You are viewing details for blog ${id}`,
-        duration: 4.5,
-        placement: 'topRight', // Explicitly set placement
-      });
-
-    }
-  }, [id, notificationApi]);
-
-  const quillRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Quill | null>(null);
-  const toolbarOptions = [
-    // Text formatting
-    ['bold', 'italic', 'underline', 'strike'],
-    ['blockquote', 'code-block'],
-
-    // Headers
-    [{ 'header': 1 }, { 'header': 2 }],
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-
-    // Font styling
-    [{ 'font': [] }],
-    [{ 'size': ['small', false, 'large', 'huge'] }],
-
-    // Text alignment
-    [{ 'align': [] }],
-
-    // Lists and indentation
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-    [{ 'indent': '-1' }, { 'indent': '+1' }],
-
-    // Text direction
-    [{ 'direction': 'rtl' }],
-
-    // Colors
-    [{ 'color': [] }, { 'background': [] }],
-
-    // Superscript/subscript
-    [{ 'script': 'sub' }, { 'script': 'super' }],
-
-    // Media and links
-    ['link', 'image', 'video', 'formula'],
-
-    // Clean formatting
-    ['clean']
-  ];
-
-  const formatOptions = [
-    // Text formatting
-    'bold', 'italic', 'underline', 'strike',
-    'blockquote', 'code-block',
-
-    // Headers
-    'header',
-
-    // Font styling
-    'font', 'size',
-
-    // Text alignment
-    'align',
-
-    // Lists and indentation
-    'list', 'indent',
-
-    // Text direction
-    'direction',
-
-    // Colors
-    'color', 'background',
-
-    // Superscript/subscript
-    'script',
-
-    // Media and links
-    'link', 'image', 'video', 'formula',
-
-    // Other formats
-    // 'clean'
-  ];
+  const isEditing = false; // Remove editing mode from this component
 
   useEffect(() => {
     if (quillRef.current && !editorRef.current) {
@@ -168,8 +152,6 @@ const BlogDetailPage: React.FC = () => {
     id,
     mappingFunction: mapBlogDetail,
   });
-
-
 
   const [submitting, setSubmitting] = useState(false);
   const [tagOptions, setTagOptions] = useState<string[]>([
@@ -197,11 +179,27 @@ const BlogDetailPage: React.FC = () => {
   }, [blog, form]);
 
   // Add effect to set up the Quill editor with initial content when ready
+  // useEffect(() => {
+  //   if (editorRef.current && blog && blog.content) {
+  //     // Thêm try-catch để bắt lỗi nếu có
+  //     try {
+  //       console.log("Loading blog content:", blog.content.substring(0, 50) + "...");
+  //       // editorRef.current.clipboard.dangerouslyPasteHTML("123123");
+  //     } catch (error) {
+  //       console.error("Failed to load content into editor:", error);
+  //     }
+  //   }
+  // }, [editorRef, blog]);
+
   useEffect(() => {
-    if (editorRef.current && blog && blog.content) {
-      editorRef.current.clipboard.dangerouslyPasteHTML(blog.content);
+    if (blog) {
+      console.log("Blog data loaded:", {
+        hasContent: !!blog.content,
+        contentLength: blog.content?.length || 0,
+        contentPreview: blog.content?.substring(0, 50) + "..."
+      });
     }
-  }, [editorRef, blog]);
+  }, [blog]);
 
   // Add effect to handle content changes
   useEffect(() => {
@@ -222,7 +220,7 @@ const BlogDetailPage: React.FC = () => {
     try {
       await apiService.patch(`/blogs/${id}`, values);
       openNotification(true, 'Blog updated successfully', '111');
-      navigate('/admin/blogs');
+      handleGoBack();
     } catch (err: any) {
       console.error('Error updating blog:', err);
       openNotification(true, 'Error updating blog', err.message);
@@ -234,13 +232,6 @@ const BlogDetailPage: React.FC = () => {
   const handleGoBack = () => {
     navigate('/admin/blogs');
   };
-
-  // const handleAddTag = (tag: string) => {
-  //   if (!tagOptions.includes(tag)) {
-  //     setTagOptions([...tagOptions, tag]);
-  //   }
-  //   return tag;
-  // };
 
   if (loading) {
     return (
@@ -254,17 +245,8 @@ const BlogDetailPage: React.FC = () => {
     return <ErrorHandler error={error || "Failed to load blog details"} hasError={true} onRetry={handleRetry} />;
   }
 
-  const headerTitle = isEditing ? "Edit Blog" : "Blog Details";
-  const headerExtra = isEditing ? (
-    <Button
-      type="primary"
-      icon={<SaveOutlined />}
-      onClick={form.submit}
-      loading={submitting}
-    >
-      Save Changes
-    </Button>
-  ) : (
+  const headerTitle = "Blog Details";
+  const headerExtra = (
     <>
       <Button
         icon={<ReloadOutlined />}
@@ -301,7 +283,7 @@ const BlogDetailPage: React.FC = () => {
       </div>
 
       <Card>
-        {!isEditing && blog ? (
+        {blog ? (
           <div className="blog-view">
             <div style={{ marginBottom: 20, textAlign: 'center' }}>
               <Image
@@ -328,117 +310,9 @@ const BlogDetailPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSave}
-            initialValues={{
-              business: 'yen-sao',
-              tags: []
-            }}
-          >
-            <Form.Item
-              name="business"
-              label="Business"
-              rules={[{ required: true, message: 'Please enter business' }]}
-            >
-              <Input placeholder="Business" />
-            </Form.Item>
-
-            <Form.Item
-              name="title"
-              label="Title"
-              rules={[{ required: true, message: 'Please enter blog title' }]}
-            >
-              <Input placeholder="Enter blog title" />
-            </Form.Item>
-
-            <Form.Item
-              name="slug"
-              label="Slug"
-              rules={[{ required: true, message: 'Please enter slug' }]}
-            >
-              <Input placeholder="Enter slug (URL-friendly name)" />
-            </Form.Item>
-
-            <Form.Item
-              name="author"
-              label="Author"
-              rules={[{ required: true, message: 'Please enter author name' }]}
-            >
-              <Input placeholder="Enter author name" />
-            </Form.Item>
-
-            <Form.Item
-              name="image"
-              label="Image URL"
-              rules={[{ required: true, message: 'Please enter image URL' }]}
-            >
-              <Input placeholder="Enter image URL" />
-            </Form.Item>
-
-            <Form.Item
-              name="date"
-              label="Date"
-              rules={[{ required: true, message: 'Please enter date' }]}
-            >
-              <Input placeholder="YYYY-MM-DD" />
-            </Form.Item>
-
-            <Form.Item
-              name="readTime"
-              label="Read Time"
-              rules={[{ required: true, message: 'Please enter read time' }]}
-            >
-              <Input placeholder="e.g., 5 min" />
-            </Form.Item>
-
-            <Form.Item
-              name="category"
-              label="Category"
-              rules={[{ required: true, message: 'Please enter category' }]}
-            >
-              <Input placeholder="Enter category" />
-            </Form.Item>
-
-            <Form.Item
-              name="tags"
-              label="Tags"
-              rules={[{ required: true, message: 'Please select at least one tag' }]}
-            >
-              <Select
-                mode="tags"
-                style={{ width: '100%' }}
-                placeholder="Select tags"
-                options={tagOptions.map(tag => ({ label: tag, value: tag }))}
-                onChange={(values: string[]) => {
-                  // Check for new tags
-                  const newValues = values.filter(val => !tagOptions.includes(val));
-                  if (newValues.length > 0) {
-                    setTagOptions(prev => [...prev, ...newValues]);
-                  }
-                }}
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="description"
-              label="Description"
-              rules={[{ required: true, message: 'Please enter description' }]}
-            >
-              <TextArea rows={4} placeholder="Enter blog description" />
-            </Form.Item>
-
-            <Form.Item
-              name="content"
-              label="Content"
-              rules={[{ required: true, message: 'Please enter content' }]}
-            >
-              <div style={{ width: '100%', height: 400, marginBottom: 50 }}>
-                <div ref={quillRef} style={{ height: '100%' }} />
-              </div>
-            </Form.Item>
-          </Form>
+          <div style={{ textAlign: 'center', padding: '50px' }}>
+            <Spin size="large" />
+          </div>
         )}
       </Card>
     </div>
