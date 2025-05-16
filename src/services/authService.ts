@@ -29,18 +29,19 @@ export const authService = {
           });
           userData = userResponse.data;
           console.log('Fetched user data:', userData);
+          localStorage.setItem(USER_KEY, JSON.stringify(userData));
         } catch (userError) {
           console.error('Failed to fetch user data:', userError);
         }
       }
       // Store user data
       if (userData) {
+        console.log('Storing user data:', userData);
         localStorage.setItem(USER_KEY, JSON.stringify(userData));
       } else {
         console.warn('No user data available to store');
       }
-
-
+      
       return user;
     } catch (error) {
       console.error('Login failed:', error);

@@ -31,4 +31,5 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   error: string | null;
+  setCurrentUser: (userData: UserProfile) => void;
 }

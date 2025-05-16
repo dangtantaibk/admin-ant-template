@@ -11,9 +11,16 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   logout: () => {},
   error: null,
+  setCurrentUser: () => {},
 });
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -25,6 +32,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const setCurrentUser = (userData: UserProfile) => {
+    setUser(userData);
+  };
 
   // Initialize auth state from localStorage on component mount
   useEffect(() => {
@@ -82,6 +93,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     error,
+    setCurrentUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

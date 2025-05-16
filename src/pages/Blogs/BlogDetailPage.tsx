@@ -237,13 +237,13 @@ const BlogDetailPage: React.FC = () => {
       <Card>
         {blog ? (
           <div className="blog-view">
-            {blog.image && <div style={{ marginBottom: 20, textAlign: 'center' }}>
+            {/* {blog.image && <div style={{ marginBottom: 20, textAlign: 'center' }}>
               <Image
                 src={blog.image}
                 alt={blog.title}
                 style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
               />
-            </div>}
+            </div>} */}
             <Title level={2}>{blog.title}</Title>
             <p><strong>Author:</strong> {blog.author}</p>
             <p><strong>Date:</strong> {blog.date}</p>

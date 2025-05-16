@@ -32,7 +32,7 @@ interface UserFormValues {
   email: string;
   fullName: string;
   phone: string;
-  roles: string[];
+  roleIds: string[];
   password?: string;
 }
 
@@ -79,7 +79,7 @@ const UserFormPage: React.FC = () => {
         email: user.email,
         fullName: user.fullName,
         phone: user.phone,
-        roles: user.roles?.map(role => role.id) || [],
+        roleIds: user.roles?.map(role => role.id) || [],
       });
     }
   }, [user, form, isEditing]);
@@ -89,6 +89,7 @@ const UserFormPage: React.FC = () => {
   };
 
   const onFinish = async (values: UserFormValues) => {
+    console.log('Form values:', values);
     setSaving(true);
     try {
       if (isEditing) {
@@ -140,7 +141,7 @@ const UserFormPage: React.FC = () => {
             form={form}
             layout="vertical"
             onFinish={onFinish}
-            initialValues={{ roles: [] }}
+            initialValues={{ roleIds: [] }}
           >
             <Form.Item
               name="fullName"
@@ -180,8 +181,8 @@ const UserFormPage: React.FC = () => {
             )}
             
             <Form.Item
-              name="roles"
-              label="Roles"
+              name="roleIds"
+              label="RoleIds"
               rules={[{ required: true, message: 'Please select at least one role' }]}
             >
               <Select

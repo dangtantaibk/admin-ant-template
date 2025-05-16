@@ -11,10 +11,11 @@ import {
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme, Typography } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { BookOutlined } from '@ant-design/icons';
+import authService from '../services/authService';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { Text } = Typography;
@@ -48,13 +49,42 @@ const items: MenuItem[] = [
 
 const AdminLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [userLoaded, setUserLoaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, setCurrentUser } = useAuth();
 
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+  useEffect(() => {
+    console.log('User: ', user);
+    const storedUser = authService.getCurrentUser();
+    if (storedUser) {
+      setCurrentUser(storedUser); 
+    } else {
+      // Handle the case when no user is found
+      navigate('/login');
+    }
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      } else {
+        setCollapsed(false);
+      }
+    };
+    handleResize(); // Set initial state based on window size
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user && !userLoaded) {
+      setUserLoaded(true);
+    }
+  }, [user, userLoaded]);
 
   // Determine selected keys based on current path
   const selectedKeys = [location.pathname];
