@@ -12,12 +12,11 @@ import {
 } from 'antd';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ErrorHandler from '../../components/ErrorHandler';
 import { useDetailFetching } from '../../hooks/useDetailFetching';
-import apiService from '../../services/api';
-import { Blog, BlogFormValues } from './types';
+import { Blog } from './types';
 
 const { Title } = Typography;
 // const { Option } = Select;
@@ -110,15 +109,7 @@ const BlogDetailPage: React.FC = () => {
   const quillRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Quill | null>(null);
 
-  const [notificationApi, contextHolder] = notification.useNotification();
-  const openNotification = (pauseOnHover: boolean, title: string, description: string) => {
-    notificationApi.open({
-      message: title,
-      description: description,
-      showProgress: true,
-      pauseOnHover,
-    });
-  };
+  const [_, contextHolder] = notification.useNotification();
 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
