@@ -1,26 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ArrowLeftOutlined, ReloadOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
   Button,
   Card,
   Form,
   Image,
-  Input,
-  Select,
   Spin,
   Typography,
-  notification,
+  notification
 } from 'antd';
-import TextArea from 'antd/es/input/TextArea';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ErrorHandler from '../../components/ErrorHandler';
 import { useDetailFetching } from '../../hooks/useDetailFetching';
 import apiService from '../../services/api';
 import { Blog, BlogFormValues } from './types';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
 
 const { Title } = Typography;
 // const { Option } = Select;
@@ -126,7 +123,6 @@ const BlogDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const isEditing = false; // Remove editing mode from this component
 
   useEffect(() => {
     if (quillRef.current && !editorRef.current) {
@@ -153,12 +149,6 @@ const BlogDetailPage: React.FC = () => {
     mappingFunction: mapBlogDetail,
   });
 
-  const [submitting, setSubmitting] = useState(false);
-  const [tagOptions, setTagOptions] = useState<string[]>([
-    'health', 'nutrition', 'traditional-medicine', 'wellness',
-    'birds-nest', 'beauty', 'recipes', 'lifestyle'
-  ]);
-
   useEffect(() => {
     if (blog && form) {
       // Set form values when blog data is available
@@ -177,19 +167,6 @@ const BlogDetailPage: React.FC = () => {
       });
     }
   }, [blog, form]);
-
-  // Add effect to set up the Quill editor with initial content when ready
-  // useEffect(() => {
-  //   if (editorRef.current && blog && blog.content) {
-  //     // Thêm try-catch để bắt lỗi nếu có
-  //     try {
-  //       console.log("Loading blog content:", blog.content.substring(0, 50) + "...");
-  //       // editorRef.current.clipboard.dangerouslyPasteHTML("123123");
-  //     } catch (error) {
-  //       console.error("Failed to load content into editor:", error);
-  //     }
-  //   }
-  // }, [editorRef, blog]);
 
   useEffect(() => {
     if (blog) {
@@ -212,22 +189,6 @@ const BlogDetailPage: React.FC = () => {
       });
     }
   }, [editorRef, form]);
-
-  const handleSave = async (values: BlogFormValues) => {
-    if (!id) return;
-
-    setSubmitting(true);
-    try {
-      await apiService.patch(`/blogs/${id}`, values);
-      openNotification(true, 'Blog updated successfully', '111');
-      handleGoBack();
-    } catch (err: any) {
-      console.error('Error updating blog:', err);
-      openNotification(true, 'Error updating blog', err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleGoBack = () => {
     navigate('/admin/blogs');
@@ -285,13 +246,13 @@ const BlogDetailPage: React.FC = () => {
       <Card>
         {blog ? (
           <div className="blog-view">
-            <div style={{ marginBottom: 20, textAlign: 'center' }}>
+            {blog.image && <div style={{ marginBottom: 20, textAlign: 'center' }}>
               <Image
                 src={blog.image}
                 alt={blog.title}
                 style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain' }}
               />
-            </div>
+            </div>}
             <Title level={2}>{blog.title}</Title>
             <p><strong>Author:</strong> {blog.author}</p>
             <p><strong>Date:</strong> {blog.date}</p>
